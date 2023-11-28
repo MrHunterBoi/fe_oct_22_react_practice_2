@@ -21,12 +21,16 @@ const photos = photosFromServer.map(photo => {
   };
 });
 
+const DEFAULT_ORDER = [...photos].map(photo => photo.id);
+
 export const App = () => {
   const [selectedUser, setSelectedUser] = useState(0);
   const [photoTitleQuery, setPhotoTitleQuery] = useState('');
   const [selectedAlbums, setSelectedAlbums] = useState([]);
   const [selectedSortingMethod, setSelectedSortingMethod] = useState('');
   const [sortBy, setSortBy] = useState('');
+  const [isSorted, setIsSorted] = useState(false);
+  const [order, setOrder] = useState([...DEFAULT_ORDER]);
 
   const columns = {
     id: 'ID',
@@ -53,7 +57,13 @@ export const App = () => {
         .includes(photoTitleQuery.toLowerCase()));
     }
 
-    if (sortBy && selectedSortingMethod) {
+    if (order.length !== viewPhotos.length) {
+      setOrder([...viewPhotos].map(photo => photo.id));
+    }
+
+    if (sortBy && selectedSortingMethod && isSorted) {
+      setIsSorted(false);
+
       viewPhotos.sort((a, b) => {
         let res = 0;
 
@@ -84,14 +94,33 @@ export const App = () => {
 
         return res;
       });
+
+      setOrder([...viewPhotos].map(photo => photo.id));
     }
+
+    const temp = [];
+
+    order.forEach(id => {
+      const photo = viewPhotos.find(p => p.id === id);
+
+      if (photo) {
+        temp.push(photo);
+      }
+    });
+
+    viewPhotos = [...temp];
 
     return viewPhotos;
   };
 
-  const handleChangingUserFilter = id => setSelectedUser(id);
+  const handleChangingUserFilter = id => {
+    setOrder([...DEFAULT_ORDER]);
+    setSelectedUser(id);
+  };
 
   const handleSelectingAlbumFilter = albumName => {
+    setOrder([...DEFAULT_ORDER]);
+
     if (selectedAlbums.includes(albumName)) {
       setSelectedAlbums(selectedAlbums.filter(album => album !== albumName));
     } else {
@@ -100,6 +129,8 @@ export const App = () => {
   };
 
   const handleChangeSortingMethod = field => {
+    setOrder([...DEFAULT_ORDER]);
+
     if (sortBy !== field) {
       setSortBy(field);
       setSelectedSortingMethod('asc');
@@ -138,12 +169,30 @@ export const App = () => {
     return 'fa-sort-down';
   };
 
+  const handleChangeOrder = (photoId, offset) => {
+    const orderClone = [...order];
+    const index = order.indexOf(photoId);
+
+    if ((index === 0 && offset === -1)
+    || (index === order.length - 1 && offset === 1)) {
+      return;
+    }
+
+    const replaceWith = order[index + offset];
+
+    orderClone.splice(index, 1, replaceWith);
+    orderClone.splice(index + offset, 1, photoId);
+
+    setOrder(orderClone);
+  };
+
   const resetAllFilters = () => {
     setSelectedUser(0);
     setPhotoTitleQuery('');
     setSelectedAlbums([]);
     setSelectedSortingMethod('');
     setSortBy('');
+    setOrder([...DEFAULT_ORDER]);
   };
 
   const photosToView = getFilteredPhotos(photos);
@@ -182,6 +231,8 @@ export const App = () => {
           columns={columns}
           handleChangeSortingMethod={handleChangeSortingMethod}
           checkSortingMethod={checkSortingMethod}
+          handleChangeOrder={handleChangeOrder}
+          setIsSorted={setIsSorted}
         />
       </div>
     </div>

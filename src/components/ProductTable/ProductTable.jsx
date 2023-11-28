@@ -3,6 +3,8 @@ export const ProductTable = ({
   columns,
   handleChangeSortingMethod,
   checkSortingMethod,
+  handleChangeOrder,
+  setIsSorted,
 }) => (
   <div className="box table-container">
     {photosToView.length === 0 ? (
@@ -17,7 +19,10 @@ export const ProductTable = ({
                   {columns[key]}
                   <a
                     href="#/"
-                    onClick={() => handleChangeSortingMethod(columns[key])}
+                    onClick={() => {
+                      setIsSorted(true);
+                      handleChangeSortingMethod(columns[key]);
+                    }}
                   >
                     <span className="icon">
                       <i data-cy="SortIcon" className={`fas ${checkSortingMethod(columns[key])}`} />
@@ -40,6 +45,24 @@ export const ProductTable = ({
 
               <td className={`${photo.user.sex === 'm' ? 'has-text-link' : 'has-text-danger'}`}>
                 {photo.user.name}
+              </td>
+
+              <td>
+                <a
+                  className="button mr-2 my-1"
+                  href="#/"
+                  onClick={() => handleChangeOrder(photo.id, 1)}
+                >
+                  &darr;
+                </a>
+
+                <a
+                  className="button mr-2 my-1"
+                  href="#/"
+                  onClick={() => handleChangeOrder(photo.id, -1)}
+                >
+                  &uarr;
+                </a>
               </td>
             </tr>
           ))}
